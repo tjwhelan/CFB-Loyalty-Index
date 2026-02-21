@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CFB Loyalty Index</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --muted: #8b9cb3;
+      --accent: #f0b429;
+      --accent-dim: #c49420;
+      --danger: #e5484d;
+      --success: #46a758;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0 0 0.25rem;
+      background: linear-gradient(135deg, var(--text), var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .form-row:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      font: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    input::placeholder { color: var(--muted); opacity: 0.8; }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(240, 180, 41, 0.2);
+    }
+    .half { flex: 1; min-width: 120px; }
+    .third { flex: 0 0 calc(33.33% - 0.5rem); min-width: 100px; }
+    .btn {
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn:hover { background: var(--accent-dim); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .details {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .details summary {
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .details .inline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .result-card {
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .result-card.hidden { display: none; }
+    .probability {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 0.25rem;
+    }
+    .probability.low { color: var(--success); }
+    .probability.mid { color: var(--accent); }
+    .probability.high { color: var(--danger); }
+    .result-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+    .breakdown {
+      text-align: left;
+      margin-top: 1rem;
+    }
+    .breakdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.85rem;
+    }
+    .breakdown-name {
+      flex: 0 0 140px;
+      color: var(--muted);
+    }
+    .breakdown-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .breakdown-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .breakdown-bar.risk { background: var(--danger); }
+    .breakdown-bar.mid { background: var(--accent); }
+    .breakdown-bar.low { background: var(--success); }
+    .breakdown-pct {
+      flex: 0 0 3rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .error-msg {
+      background: rgba(229, 72, 77, 0.15);
+      border: 1px solid var(--danger);
+      color: #f0a0a4;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .error-msg.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>CFB Loyalty Index</h1>
+      <p class="tagline">Transfer probability for college football athletes</p>
+    </header>
+
+    <div class="card">
+      <h2>Look up from API</h2>
+      <div class="error-msg hidden" id="error" role="alert"></div>
+      <form id="form">
+        <div class="form-row">
+          <div class="half">
+            <label for="player">Player name</label>
+            <input type="text" id="player" name="player" placeholder="e.g. Marvin Harrison Jr" autocomplete="off">
+          </div>
+          <div class="half">
+            <label for="year">Year</label>
+            <input type="number" id="year" name="year" min="2015" max="2030" placeholder="2024">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="half">
+            <label for="team">Team (optional — auto-filled from player)</label>
+            <input type="text" id="team" name="team" placeholder="e.g. Ohio State">
+          </div>
+        </div>
+        <details class="details">
+          <summary>Optional overrides</summary>
+          <div class="inline">
+            <div>
+              <label for="nil">NIL strength (0–1)</label>
+              <input type="number" id="nil" name="nil" min="0" max="1" step="0.1" placeholder="1 = strong">
+            </div>
+            <div>
+              <label for="social">Social sentiment (0–1)</label>
+              <input type="number" id="social" name="social" min="0" max="1" step="0.1" placeholder="1 = unhappy">
+            </div>
+            <div>
+              <label for="distance">Distance from HS (mi)</label>
+              <input type="number" id="distance" name="distance" min="0" step="10" placeholder="Miles">
+            </div>
+          </div>
+        </details>
+        <div class="form-row" style="margin-top: 1.25rem;">
+          <button type="submit" class="btn" id="submitBtn">Calculate probability</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card result-card hidden" id="resultCard">
+      <h2>Result</h2>
+      <div class="probability" id="probabilityEl">—</div>
+      <p class="result-label">Probability to transfer (next 12 months)</p>
+      <p class="meta" id="meta"></p>
+      <div class="breakdown" id="breakdown"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const errorEl = document.getElementById('error');
+    const resultCard = document.getElementById('resultCard');
+    const probabilityEl = document.getElementById('probabilityEl');
+    const metaEl = document.getElementById('meta');
+    const breakdownEl = document.getElementById('breakdown');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (!document.getElementById('year').value) {
+      document.getElementById('year').value = new Date().getFullYear();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      const player = document.getElementById('player').value.trim();
+      const team = document.getElementById('team').value.trim();
+      const year = document.getElementById('year').value || new Date().getFullYear();
+      const nil = document.getElementById('nil').value;
+      const social = document.getElementById('social').value;
+      const distance = document.getElementById('distance').value;
+
+      if (!player && !team) {
+        errorEl.textContent = 'Enter a player name or a team.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      try {
+        const params = new URLSearchParams({ year });
+        if (team) params.set('team', team);
+        if (player) params.set('playerName', player);
+        const res = await fetch(`/api/score?${params}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            year: Number(year),
+            ...(team && { team }),
+            ...(player && { playerName: player }),
+            ...(nil !== '' && { nilScore: Number(nil) }),
+            ...(social !== '' && { socialSentiment: Number(social) }),
+            ...(distance !== '' && { distanceFromHighSchoolMiles: Number(distance) }),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || res.statusText);
+        }
+        renderResult(data);
+        resultCard.classList.remove('hidden');
+      } catch (err) {
+        errorEl.textContent = err.message || 'Request failed';
+        errorEl.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    function barClass(risk) {
+      if (risk >= 0.6) return 'risk';
+      if (risk >= 0.4) return 'mid';
+      return 'low';
+    }
+
+    function renderResult(data) {
+      const p = data.probability ?? 50;
+      probabilityEl.textContent = p + '%';
+      probabilityEl.className = 'probability ' + (p >= 60 ? 'high' : p >= 40 ? 'mid' : 'low');
+
+      const meta = data.input?._meta || {};
+      metaEl.textContent = [meta.playerName, meta.team, meta.year].filter(Boolean).join(' · ') || '—';
+
+      const breakdown = data.breakdown || {};
+      breakdownEl.innerHTML = Object.entries(breakdown).map(([key, v]) => {
+        const risk = v.risk ?? 0;
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+        return `
+          <div class="breakdown-item">
+            <span class="breakdown-name">${label}</span>
+            <div class="breakdown-bar-wrap"><div class="breakdown-bar ${barClass(risk)}" style="width:${Math.round(risk * 100)}%"></div></div>
+            <span class="breakdown-pct">${Math.round(risk * 100)}%</span>
+          </div>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

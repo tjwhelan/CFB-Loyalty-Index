@@ -1,0 +1,15 @@
+{
+  "name": "cfb-loyalty-index",
+  "version": "1.0.0",
+  "description": "Rates college football athletes' probability to transfer within the next year",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "score": "node src/index.js score",
+    "server": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
